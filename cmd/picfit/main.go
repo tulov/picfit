@@ -41,8 +41,26 @@ func main() {
 			Usage:     "Verify that your client application is generating correct signatures",
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:  "key",
-					Usage: "The signing key",
+					Name:     "key",
+					Usage:    "The signing key",
+					Required: true,
+				},
+				cli.StringFlag{
+					Name:     "method",
+					Usage:    "HTTP method",
+					Required: false,
+					Value:    "GET",
+				},
+				cli.StringFlag{
+					Name:     "url",
+					Usage:    "Full url without query string and host",
+					Required: false,
+					Value:    "/",
+				},
+				cli.StringFlag{
+					Name:     "path",
+					Usage:    "Path to file for upload to server",
+					Required: false,
 				},
 			},
 			Action: func(c *cli.Context) {
@@ -51,22 +69,23 @@ func main() {
 					fmt.Fprintf(os.Stderr, "You must provide a key\n")
 					os.Exit(1)
 				}
+				method := c.String("method")
+				url := c.String("url")
+				path := c.String("path")
 
-				if len(c.Args()) < 1 {
-					fmt.Fprintf(os.Stderr, "You must provide a Query String\n")
-					os.Exit(1)
+				queryString := ""
+				if len(c.Args()) > 0 {
+					queryString = c.Args()[0]
 				}
 
-				queryString := c.Args()[0]
-
-				sig, err := signature.SignRaw(key, queryString)
+				sig, err := signature.SignRaw(key, method, url, path, queryString)
 
 				if err != nil {
 					fmt.Println(err.Error())
 					os.Exit(1)
 				}
 
-				appended := signature.AppendSign(key, queryString)
+				appended := signature.AppendSign(queryString, sig)
 
 				fmt.Fprintf(os.Stdout, "Query String: %s\n", queryString)
 				fmt.Fprintf(os.Stdout, "Signature: %s\n", sig)

@@ -3,7 +3,6 @@ package picfit
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"net/url"
 	"os"
 	"strings"
@@ -19,7 +18,6 @@ import (
 	"github.com/thoas/picfit/hash"
 	"github.com/thoas/picfit/image"
 	"github.com/thoas/picfit/logger"
-	"github.com/thoas/picfit/payload"
 	"github.com/thoas/picfit/store"
 )
 
@@ -33,29 +31,17 @@ type Processor struct {
 }
 
 // Upload uploads a file to its storage
-func (p *Processor) Upload(payload *payload.Multipart) (*image.ImageFile, error) {
-	var fh io.ReadCloser
+func (p *Processor) Upload(c *gin.Context) (*image.ImageFile, error) {
+	file := c.MustGet("file").(bytes.Buffer)
+	fileName := c.MustGet("file_name").(string)
 
-	fh, err := payload.Data.Open()
+	err := p.sourceStorage.Save(fileName, gostorages.NewContentFile(file.Bytes()))
 	if err != nil {
-		return nil, err
-	}
-	defer fh.Close()
-
-	dataBytes := bytes.Buffer{}
-
-	_, err = dataBytes.ReadFrom(fh)
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to read data from uploaded file")
-	}
-
-	err = p.sourceStorage.Save(payload.Data.Filename, gostorages.NewContentFile(dataBytes.Bytes()))
-	if err != nil {
-		return nil, errors.Wrapf(err, "unable to save data on storage as: %s", payload.Data.Filename)
+		return nil, errors.Wrapf(err, "unable to save data on storage as: %s", fileName)
 	}
 
 	return &image.ImageFile{
-		Filepath: payload.Data.Filename,
+		Filepath: fileName,
 		Storage:  p.sourceStorage,
 	}, nil
 }

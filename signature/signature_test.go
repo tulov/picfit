@@ -14,7 +14,7 @@ func TestSign(t *testing.T) {
 }
 
 func TestAppendSign(t *testing.T) {
-	qs := AppendSign("abcdef", "x=1&y=2&z=3")
+	qs := AppendSign("x=1&y=2&z=3", "c9516346abf62876b6345817dba2f9a0c797ef26")
 
 	if qs != "x=1&y=2&z=3&sig=c9516346abf62876b6345817dba2f9a0c797ef26" {
 		t.Errorf("Append fails: %s", qs)

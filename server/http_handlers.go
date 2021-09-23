@@ -8,14 +8,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
-	"github.com/mholt/binding"
-
 	api "gopkg.in/fukata/golang-stats-api-handler.v1"
 
 	"github.com/thoas/picfit"
 	"github.com/thoas/picfit/constants"
 	"github.com/thoas/picfit/failure"
-	"github.com/thoas/picfit/payload"
 )
 
 type handlers struct {
@@ -73,13 +70,8 @@ func (h handlers) display(c *gin.Context) error {
 
 // upload uploads an image to the destination storage
 func (h handlers) upload(c *gin.Context) error {
-	multipartPayload := new(payload.Multipart)
-	err := binding.Bind(c.Request, multipartPayload)
-	if err != nil {
-		return err
-	}
 
-	file, err := h.processor.Upload(multipartPayload)
+	file, err := h.processor.Upload(c)
 
 	if err != nil {
 		return err

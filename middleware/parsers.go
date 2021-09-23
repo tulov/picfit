@@ -1,7 +1,10 @@
 package middleware
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/mholt/binding"
+	"github.com/thoas/picfit/payload"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -22,12 +25,11 @@ var parametersReg = regexp.MustCompile(`(?:(?P<sig>\w+)/)?(?P<op>\w+)/(?:(?P<w>\
 func ParametersParser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		result := c.Param("parameters")
+		parameters := make(map[string]interface{})
 
 		if result != "" {
 			match := parametersReg.FindStringSubmatch(result)
 			if match != nil {
-				parameters := make(map[string]interface{})
-
 				results := parametersReg.SubexpNames()
 
 				for i, name := range results {
@@ -35,17 +37,41 @@ func ParametersParser() gin.HandlerFunc {
 						parameters[name] = match[i]
 					}
 				}
-
-				c.Set("parameters", parameters)
 			}
 		} else {
-			if c.Query("url") == "" && c.Query("path") == "" {
+			if c.Request.Method == "POST" && c.Query("sig") != "" {
+				parameters["sig"] = c.Query("sig")
+			} else if c.Query("url") == "" && c.Query("path") == "" && c.Query("sig") == "" {
 				c.String(http.StatusBadRequest, "Request should contains parameters or query string")
 				c.Abort()
 				return
 			}
 		}
+		c.Set("parameters", parameters)
 
+		c.Next()
+	}
+}
+
+// FileParser matches files from query
+func FileParser() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		multipartPayload := new(payload.Multipart)
+		dataBytes := bytes.Buffer{}
+		fName := ""
+		if c.Request.Method == "POST" {
+			err := binding.Bind(c.Request, multipartPayload)
+			if err == nil {
+				fh, err := multipartPayload.Data.Open()
+				if err == nil {
+					_, _ = dataBytes.ReadFrom(fh)
+					fName = multipartPayload.Data.Filename
+				}
+				defer fh.Close()
+			}
+		}
+		c.Set("file", dataBytes)
+		c.Set("file_name", fName)
 		c.Next()
 	}
 }

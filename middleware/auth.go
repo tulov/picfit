@@ -1,27 +1,36 @@
 package middleware
 
 import (
+	"bytes"
+	"github.com/gin-gonic/gin"
+	"github.com/thoas/picfit/signature"
 	"net/http"
 	"strconv"
-
-	"github.com/gin-gonic/gin"
+	"strings"
 
 	"github.com/thoas/go-funk"
 	"github.com/thoas/picfit/config"
-	"github.com/thoas/picfit/signature"
 )
 
 // Security wraps the request and confront sent parameters with secret key
 func Security(secretKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if secretKey != "" {
-			if !signature.VerifyParameters(secretKey, c.MustGet("parameters").(map[string]interface{})) {
+		// защищаем только методы для добавления и удаления изображений, а также если есть параметр url
+		if secretKey == "" {
+			c.Next()
+		}
+		parameters := c.MustGet("parameters").(map[string]interface{})
+		if c.Request.Method == "DELETE" || c.Request.Method == "POST" && c.FullPath() == "/upload" ||
+			parameters["url"] != nil {
+			body := c.MustGet("file").(bytes.Buffer)
+			bodyHash := signature.SignBody(secretKey, &body)
+			path := strings.Split(c.Request.RequestURI, "?")[0]
+			if !signature.VerifyRequest(secretKey, c.Request.Method, path, bodyHash, parameters) {
 				c.String(http.StatusUnauthorized, "Invalid signature")
 				c.Abort()
 				return
 			}
 		}
-
 		c.Next()
 	}
 }

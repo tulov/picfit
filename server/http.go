@@ -138,6 +138,7 @@ func (s *HTTPServer) Init() error {
 		views := []gin.HandlerFunc{
 			middleware.ParametersParser(),
 			middleware.KeyParser(),
+			middleware.FileParser(),
 			middleware.Security(s.config.SecretKey),
 			middleware.URLParser(s.config.Options.MimetypeDetector),
 			middleware.OperationParser(),
@@ -155,6 +156,10 @@ func (s *HTTPServer) Init() error {
 	if s.config.Options.EnableUpload {
 		router.POST("/upload",
 			restrictIPAddresses,
+			middleware.ParametersParser(),
+			middleware.KeyParser(),
+			middleware.FileParser(),
+			middleware.Security(s.config.SecretKey),
 			failure.Handle(handlers.upload))
 	}
 
@@ -163,6 +168,8 @@ func (s *HTTPServer) Init() error {
 			restrictIPAddresses,
 			middleware.ParametersParser(),
 			middleware.KeyParser(),
+			middleware.FileParser(),
+			middleware.Security(s.config.SecretKey),
 			failure.Handle(handlers.delete))
 	}
 

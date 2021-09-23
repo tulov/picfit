@@ -2,12 +2,13 @@ package storage
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
-	"github.com/mitchellh/goamz/aws"
 	"github.com/ulule/gostorages"
 
 	"github.com/thoas/picfit/logger"
+	"github.com/tulov/storages"
 )
 
 const (
@@ -83,25 +84,7 @@ func newStorage(cfg *StorageConfig) (gostorages.Storage, error) {
 
 		return &HTTPStorage{storage, ""}, nil
 	case s3StorageType:
-		acl, ok := gostorages.ACLs[cfg.ACL]
-		if !ok {
-			return nil, fmt.Errorf("The ACL %s does not exist", cfg.ACL)
-		}
-
-		region, ok := aws.Regions[cfg.Region]
-		if !ok {
-			return nil, fmt.Errorf("The Region %s does not exist", cfg.Region)
-		}
-
-		return gostorages.NewS3Storage(
-			cfg.AccessKeyID,
-			cfg.SecretAccessKey,
-			cfg.BucketName,
-			cfg.Location,
-			region,
-			acl,
-			cfg.BaseURL,
-		), nil
+		return storages.NewS3Storage(os.Getenv("AWS_ENDPOINT_URL")), nil
 	case httpDOs3StorageType:
 		cfg.Type = DOs3StorageType
 
