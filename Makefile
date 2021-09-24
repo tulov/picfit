@@ -1,5 +1,8 @@
+PROJECT_NAME ?= image_server
 ROOT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-VERSION=$(awk '/Version/ { gsub("\"", ""); print $NF }' ${ROOT_DIR}/application/constants.go)
+VERSION=`git describe --tags`
+PROJECT_NAMESPACE ?= tulovalex
+REGISTRY_IMAGE ?= $(PROJECT_NAMESPACE)/$(PROJECT_NAME)
 
 branch = $(shell git rev-parse --abbrev-ref HEAD)
 commitMessage = $(shell git log -1 --pretty=%B)
@@ -67,3 +70,12 @@ docker-build:
 	@(docker build -t picfit-builder -f Dockerfile.build .)
 	@(mkdir -p $(BIN_DIR))
 	@(docker run --rm -v $(BIN_DIR):$(APP_DIR)/bin picfit-builder)
+
+dockerize:
+	docker build -t $(PROJECT_NAME):$(VERSION) .
+
+upload: dockerize
+	docker tag $(PROJECT_NAME):$(VERSION) $(REGISTRY_IMAGE):$(VERSION)
+	docker tag $(PROJECT_NAME):$(VERSION) $(REGISTRY_IMAGE):latest
+	docker push $(REGISTRY_IMAGE):$(VERSION)
+	docker push $(REGISTRY_IMAGE):latest
