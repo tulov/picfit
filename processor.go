@@ -225,6 +225,10 @@ func (p *Processor) ProcessContext(c *gin.Context, opts ...Option) (*image.Image
 			if err != nil {
 				return nil, err
 			}
+			location := os.Getenv("PICFIT_LOCATION")
+			if location != "" {
+				filepath = location + "/" + filepath
+			}
 
 			p.logger.Info("Key found in store",
 				logger.String("key", storeKey),

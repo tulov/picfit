@@ -270,7 +270,7 @@ github.com/thoas/go-funk
 # github.com/thoas/stats v0.0.0-20160726120248-152b5d051953
 ## explicit
 github.com/thoas/stats
-# github.com/tulov/storages v0.1.0
+# github.com/tulov/storages v0.1.2
 ## explicit; go 1.17
 github.com/tulov/storages
 # github.com/ugorji/go/codec v1.2.6

@@ -28,7 +28,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/thoas/go-funk v0.4.0
 	github.com/thoas/stats v0.0.0-20160726120248-152b5d051953
-	github.com/tulov/storages v0.1.0
+	github.com/tulov/storages v0.1.2
 	github.com/ulule/gokvstores v0.0.0-20190522151009-afe9350f1dcd
 	github.com/ulule/gostorages v0.0.0-20190508132116-7b1387fcb001
 	github.com/urfave/cli v1.22.5
